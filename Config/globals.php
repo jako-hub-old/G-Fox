@@ -16,8 +16,6 @@ define("APP_DIR", ROOT_DIR . DS . "APP");
 define("CACHE_DIR", ROOT_DIR . DS . "Cache");
 # Config folder.
 define("CONFIG_DIR", ROOT_DIR . DS . "Config");
-# Models folder into application.
-define("MODELS_DIR", APP_DIR . DS . "Models");
 # Framework folder.
 define("KERNEL_DIR", ROOT_DIR . DS . "GF");
 # Public folder.
