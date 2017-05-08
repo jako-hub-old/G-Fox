@@ -93,7 +93,7 @@ class System {
      * @param bool $once
      * @return bool
      */
-    private static function importMultiple(array $resources, bool $usingAlias, bool $once){
+    private static function importMultiple(array $resources, bool $usingAlias, bool $once) : bool{
         $error = false;
         foreach($resources AS $resource){
             if(!self::importSingle($resource, $usingAlias, $once)) return false;
@@ -108,8 +108,9 @@ class System {
      * @param string $path
      * @param bool $isFile
      * @param string $extension
+     * @return string
      */
-    public static function resolvePath(string $path, $isFile = false, $extension = "php"){
+    public static function resolvePath(string $path, $isFile = false, $extension = "php") : string{
         $parts = explode('.', $path);
         $lastPart = end($parts);
         $alias = reset($parts);
@@ -131,6 +132,16 @@ class System {
         if(!strpos($path, ".")) return false;
         $path = str_replace(".", "\\", $path);
         return "\\" . ucfirst($path);
+    }
+
+    /**
+     * This function transforms from a namespace syntax to a dots notation syntax.
+     * @param string $namespace
+     * @return bool|mixed
+     */
+    public static function namespaceToDots(string $namespace){
+        if(!strpos($namespace, "\\")) return false;
+        return str_replace("\\", ".", $namespace);
     }
 
     /**

@@ -11,7 +11,7 @@ define("DS", DIRECTORY_SEPARATOR);
 # Root directory.
 define("ROOT_DIR", realpath(__DIR__ . '/../'));
 # App folder.
-define("APP_DIR", ROOT_DIR . DS . "APP");
+define("APP_DIR", ROOT_DIR . DS . "App");
 # Cache folder.
 define("CACHE_DIR", ROOT_DIR . DS . "Cache");
 # Config folder.
