@@ -21,4 +21,4 @@ define("KERNEL_DIR", ROOT_DIR . DS . "GF");
 # Public folder.
 define("PUBLIC_DIR", ROOT_DIR . DS . "Public");
 # The vendors folder
-define("VENDOR_DIR", ROOT_DIR . DS . "vendor");
+define("VENDOR_DIR", ROOT_DIR . DS . "Vendor");
