@@ -34,11 +34,29 @@ class System {
      * @return WebApplication
      */
     public static function createApp() : WebApplication{
-        self::loadUtilities();
+        self::init();
         self::import("GF.WebApplication");
         self::$application = WebApplication::getInstance();
         self::$application->init();
         return self::$application;
+    }
+
+    /**
+     * This function initializes the system.
+     */
+    public function init(){
+        spl_autoload_register("\GF\System::autoloadClass");
+        self::loadUtilities();
+    }
+
+    /**
+     * This function serves as auto-loader class.
+     * @param string $className
+     */
+    private static function autoloadClass(string $className){
+        $file = self::namespaceToDots($className);
+        if(!self::exists($file)) return;
+        self::import($file);
     }
 
     /**
@@ -167,11 +185,31 @@ class System {
     /**
      * Checks if the folder exists, if not, it creates it.
      * @param string $path
+     * @version 1.1
      * @return bool
      */
-    public static function dir(string $path){
+    public static function dir(string $path, bool $recursive = false){
+        if($recursive && !self::exists($path, false)) return self::createDirRecursive($path);
         if(!self::exists($path, false)) return mkdir(self::resolvePath($path, false));
         else return false;
+    }
+
+    /**
+     * This function creates a directory using recursion.
+     * @param string $path
+     * @return bool
+     */
+    private static function createDirRecursive(string $path) : bool{
+        $parts = explode(".", $path);
+        $alias = $parts[0];
+        unset($parts[0]);
+        $path = $alias;
+        foreach($parts AS $dir){
+            $path .= ".{$dir}";
+            $created = self::dir($path);
+            if(!$created) return false;
+        }
+        return true;
     }
 
     /**
@@ -180,6 +218,22 @@ class System {
      */
     public static function version(){
         return self::$version;
+    }
+
+    /**
+     * This function allows to read an application config file.
+     * @param string $config
+     * @return array|mixed|null
+     */
+    public static function readConfig(string $config){
+        return self::import("Config.{$config}")?? [];
+    }
+
+    /**
+     * This function stops the application.
+     */
+    public static function end(){
+        exit();
     }
 
 }
