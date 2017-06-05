@@ -1,15 +1,13 @@
 <?php
-
+/**
+ * This file contains the application components to be loaded.
+ * @package Configs
+ * @author Jorge Alejandro Quiroz Serna <alejo.jko@gmail.com>
+ * @version 1.0
+ * @copyright (c) 2017, Jakolab
+ */
 use \GF\Components\Route;
-Route::get("/", function(){
-    echo "<h1>You are in home!</h1>";
-});
 
-Route::get("users/id:/hello", function($request, $id){
-    echo "Hello {$id}";
-});
+Route::get("/", "\Controllers\Main", "Home");
 
-Route::get("users/age:/sayHello/name:", function($request, $age, $name){
-    echo "Hello my name is {$name} and I am {$age} years old<br>";
-});
 
