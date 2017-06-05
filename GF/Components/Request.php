@@ -10,12 +10,22 @@
 
 namespace GF\Components;
 
+use \GF\WebApplication;
+
 class Request {
-    const GET = 0;
-    const POST = 1;
-    const PUT = 2;
-    const UPDATE = 3;
-    const DELETE = 4;
+    /**
+     * Types of request.
+     */
+    const GET = 'GET';
+    const POST = 'POST';
+    const PUT = 'PUT';
+    const UPDATE = 'UPDATE';
+    const DELETE = 'DELETE';
+    /**
+     * The method send by the browser.
+     * @var string
+     */
+    private $realRequestMethod;
     /**
      * Type of request.
      * @var int
@@ -36,7 +46,34 @@ class Request {
      * @var callable
      */
     private $requestedAction;
+    /**
+     * Requested controller.
+     * @var string
+     */
+    private $controllerName = null;
+    /**
+     * Requested action.
+     * @var string
+     */
+    private $controllerAction = null;
+    /**
+     * Requested callback.
+     * @var string
+     */
+    private $controllerCallable = null;
+    /**
+     * If the request is a callback.
+     * @var bool
+     */
+    private $isCallable = false;
+    /**
+     * @var \GF\WebApplication
+     */
+    private $app;
 
+    public function __construct(WebApplication &$application){
+        $this->app = $application;
+    }
     /**
      * This function initializes the request component.
      */
@@ -45,12 +82,30 @@ class Request {
         $this->route = Route::getInvokedRoute();
         $this->params = Route::getRouteParams();
         $this->requestedAction = Route::getAction();
+        $this->realRequestMethod = $this->app->Server()->Method();
     }
 
     /**
      * This function dispatches the request.
      */
-    public function dispatch(){}
+    public function dispatch(){
+        if($this->route == null)
+            throw new \Exception("The route does not exists");
+        else if($this->realRequestMethod !== $this->type)
+            throw new \Exception("Not allowed method", 1);
+        else if(!isset($this->requestedAction[0]))
+            throw new \Exception("There is not params for the current request!");
+        if(is_callable($this->requestedAction[0])){
+            $this->controllerCallable = $this->requestedAction[0];
+            $this->isCallable = true;
+        } else if(is_string($this->requestedAction[0])){
+            $this->controllerName = $this->requestedAction[0];
+            $this->controllerAction = $this->requestedAction[1]?? "index";
+            $this->app->loadController($this->controllerName, $this->controllerAction);
+        } else {
+            throw new \Exception("Not a valid request");
+        }
+    }
 
     /**
      * This function returns the type of request executed.
