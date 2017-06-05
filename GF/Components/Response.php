@@ -38,9 +38,17 @@ class Response{
      * @var mixed
      */
     private $action = null;
+    private $callable = null;
+    private $controller = null;
+    /**
+     * @var \GF\WebApplication
+     */
+    private $app;
+    private $headers = [];
+    private $body;
 
-    public function __construct(Request &$request) {
-        $this->request = $request;
+    public function __construct(\GF\WebApplication &$app) {
+        $this->app = $app;
         $this->contentType = self::CONTENT_HTML;
     }
 
@@ -48,8 +56,8 @@ class Response{
      * Initialize the response.
      */
     public function init(){
-        $this->action = $this->request->getRequestedAction();
-        $this->output = $this->loadContent();
+        $this->resolveInvokedFunction();
+        $this->loadContent();
     }
 
     /**
@@ -59,39 +67,58 @@ class Response{
         echo $this->output;
     }
 
+    private function resolveInvokedFunction(){
+        $action = $this->app->Request()->getRequestedAction();
+        if(!isset($action[0])) return false;
+        if(is_callable($action[0])){
+            $this->callable = $action[0];
+        } else if(is_string($action[0])){
+            $this->controller = $action[0];
+            $this->action = $action[0];
+        }
+    }
+
+    public function setContent(string $content){
+        $this->output = $content;
+    }
+
     /**
-     * This function returns the
+     * This function returns the type of action invoked
      * @return int
      */
     private function getTypeOfAction(){
         if(is_callable($this->action)) return self::ACTION_CALLABLE;
-        #else if(is_string($this->action))
-            # If the action is an string
-        #else if(is_array($this->action))
-            # If the action is an array
-        #
+        else if($this->controller !== null) return self::ACTION_CONTROLLER;
         else return null;
     }
 
     /**
      * This function loads the application's content.
-     * @return string
      */
-    private function loadContent() : string {
+    private function loadContent() {
         switch ($this->getTypeOfAction()){
-            case self::ACTION_CALLABLE: return $this->processCallable();
-            default : return null;
+            case self::ACTION_CALLABLE:  $this->processCallable(); break;
+            case self::ACTION_CONTROLLER: $this->processController(); break;
         }
     }
 
     /**
      * This function process a callable action.
-     * @return string
      */
-    private function processCallable() : string {
-        $params = array_merge([$this], $this->request->getParams());
+    private function processCallable() {
+        $params = array_merge([$this], $this->app->Request()->getParams());
         ob_start();
-        call_user_func_array($this->action, $params);
-        return ob_get_clean();
+        $result = call_user_func_array($this->callable, $params);
+        #$this->output = ob_get_clean();
+        $str = ob_get_clean();
+        $this->output = $str == ""? $result : $str;
+    }
+
+    /**
+     * This function allows to
+     */
+    private function processController(){
+        $response = call_user_func_array([$this->app->Controller(), $this->app->Action()], $this->app->Request()->getParams());
+        if(is_string($response)) $this->output = $response;
     }
 }
