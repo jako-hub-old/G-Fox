@@ -20,6 +20,6 @@ return [
     'Public' => PUBLIC_DIR,
     'Vendor' => VENDOR_DIR,
     'Components' => APP_DIR . DS . "Components",
-    'Layouts' => APP_DIR . DS . "Views" . DS . "Layouts",
+    'Layouts' => APP_DIR . DS . "Views" . DS . "layouts",
     'Root' => ROOT_DIR,
 ];
