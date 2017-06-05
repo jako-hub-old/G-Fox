@@ -37,6 +37,47 @@ class Route {
      */
     private static $typeOfRequest;
 
+    private static $_baseUrl;
+    private $baseUrl;
+    private $app;
+
+    public function __construct(\GF\WebApplication &$app) {
+        $this->app = $app;
+    }
+
+    public function init(){
+        $this->buildBaseurl();
+        # $this->>fetchPreviousUrl();
+    }
+
+    private function buildBaseUrl(){
+        $protocol = $this->app->Server()->Protocol();
+        $host = $this->app->Server()->HostName();
+        $port = $this->app->Server()->HostPort();
+        $folder = str_replace("Public", '', dirname($this->app->Server()->ScriptName()));
+        $this->baseUrl = "{$protocol}://{$host}" . ($port == '80'? '' : ":{$port}") . $folder;
+        self::$_baseUrl = $this->baseUrl;
+    }
+
+    public function BaseUrl() : string{
+        return $this->baseUrl;
+    }
+
+    public static function UrlBase() : string{
+        return self::$_baseUrl;
+    }
+
+    public static function create(string $route, array $params = []) : string{
+        preg_match_all("|\/?[a-z]+:|", $route, $matches, PREG_PATTERN_ORDER);
+        $urlBase = self::urlBase();
+        if(!isset($matches[0])){ return $urlBase . $route; }
+        foreach($matches[0] AS $key => $param){
+            $replace = is_int(strpos($param, '/'))? "/" . $params[$key] : $params[$key];
+            $route = str_replace($param, $replace, $route);
+        }
+        return $urlBase . $route;
+    }
+
     /**
      * This function searches for the current route.
      */
@@ -52,16 +93,22 @@ class Route {
      * This function defines a get route.
      * @param string $route
      * @param $params
-     * @return bool
      */
-    public static function get(string $route, $params){
-        if(self::$calledRoute !== null && !self::compare(self::$currentRoute, $route))
-            return false;
-        self::$callable = $params;
-        self::$calledRoute = $route;
-        self::$typeOfRequest = \GF\Components\Request::GET;
+    public static function get(string $route, ...$params){
+        if(self::$calledRoute !== null || !self::compare(self::$currentRoute, $route)) return;
+        self::registerRoute(\GF\Components\Request::GET, $route, $params);
     }
 
+    public static function post(string $route, ...$params){
+        if(self::$calledRoute !== null || !self::compare(self::$currentRoute, $route)) return;
+        self::registerRoute(\GF\Components\Request::POST, $route, $params);
+    }
+
+    public static function registerRoute($method, $route, $params){
+        self::$callable = $params;
+        self::$calledRoute = $route;
+        self::$typeOfRequest = $method;
+    }
     /**
      *  This function builds the params to be passed to the invoked action.
      * @param $pattern string
@@ -103,7 +150,7 @@ class Route {
         $pattern = $route;
         foreach($params AS $param){
             $rep =  is_int(strpos($param, "/"))? '\/(\w+)' : '(\w+)';
-            $pattern = str_replace($params, $rep, $pattern);
+            $pattern = str_replace($param, $rep, $pattern);
         }
         return $pattern;
     }
